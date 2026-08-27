@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-base-950 text-ink-100 font-sans antialiased;
+    background-image: radial-gradient(circle at 15% 0%, rgba(202, 161, 78, 0.06), transparent 45%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  ::selection {
+    @apply bg-gold-500/30 text-ink-100;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #2c2c35;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: #3a3a45;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-base-900 border border-base-700/70 rounded-2xl shadow-panel;
+  }
+
+  .card {
+    @apply bg-base-850 border border-base-700/60 rounded-xl shadow-card;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-gold-500 text-base-950 hover:bg-gold-400 shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply btn bg-base-800 text-ink-100 border border-base-600 hover:bg-base-700;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-300 hover:bg-base-800 hover:text-ink-100;
+  }
+
+  .btn-danger {
+    @apply btn bg-state-danger/15 text-state-danger border border-state-danger/30 hover:bg-state-danger/25;
+  }
+
+  .input {
+    @apply w-full rounded-lg bg-base-900 border border-base-600 px-3 py-2 text-sm text-ink-100 placeholder:text-ink-500 focus:outline-none focus:ring-1 focus:ring-gold-500 focus:border-gold-500 transition-colors;
+  }
+
+  .label {
+    @apply block text-xs font-medium uppercase tracking-wide text-ink-500 mb-1.5;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-base-800/60 transition-colors;
+  }
+}
