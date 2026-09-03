@@ -43,6 +43,12 @@ export function normalizeLeadContext(context, { requestId } = {}) {
     AURA_CONFIG.ACTIVE_PROPOSAL_STATUSES.includes(p.status)
   );
 
+  // `events` is sorted newest-first (see contextService), so the first
+  // STAGE_CHANGED entry found is the most recent stage transition. A lead
+  // that has never had one has been in its initial stage since creation.
+  const mostRecentStageChange = events.find((e) => e.type === 'STAGE_CHANGED');
+  const stageEnteredAt = mostRecentStageChange ? mostRecentStageChange.createdAt : lead.createdAt;
+
   return {
     contractVersion: AURA_CONTRACT_VERSION,
     requestId: requestId || crypto.randomUUID(),
@@ -112,6 +118,11 @@ export function normalizeLeadContext(context, { requestId } = {}) {
       qualification: lead.qualification,
       proposalCount: proposals.length,
       activeProposalCount: activeProposals.length,
+      // When this lead entered its CURRENT stage, derived from the most
+      // recent real STAGE_CHANGED timeline event (falls back to the lead's
+      // own createdAt if it has never changed stage). Backs the
+      // PIPELINE_STAGNATION signal.
+      stageEnteredAt,
     },
   };
 }

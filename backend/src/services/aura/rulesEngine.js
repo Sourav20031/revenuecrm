@@ -19,7 +19,7 @@ function daysBetween(a, b) {
  * Fires when the lead has one or more Scheduled follow-ups whose date has
  * already passed.
  */
-function evaluateFollowUpOverdue(contract) {
+function evaluateFollowUpOverdue(contract, config) {
   const { followUp } = contract;
   if (!followUp.mostOverdue) return null;
 
@@ -32,7 +32,7 @@ function evaluateFollowUpOverdue(contract) {
       ? 'A scheduled follow-up is overdue'
       : `${followUp.overdueCount} scheduled follow-ups are overdue`,
     reason: `The ${followUp.mostOverdue.type.toLowerCase()} follow-up scheduled for ${new Date(followUp.mostOverdue.date).toLocaleDateString()} is ${daysOverdue} day(s) past due and still marked "Scheduled".`,
-    priority: daysOverdue >= 3 ? 'CRITICAL' : 'HIGH',
+    priority: daysOverdue >= config.FOLLOW_UP_OVERDUE_CRITICAL_DAYS ? 'CRITICAL' : 'HIGH',
     recommendation: {
       type: 'COMPLETE_OVERDUE_FOLLOW_UP',
       message: 'Complete, reschedule, or cancel the overdue follow-up so the lead does not stall.',
@@ -79,6 +79,45 @@ function evaluateFollowUpGap(contract) {
 }
 
 /**
+ * Signal: PIPELINE_STAGNATION
+ * Domain: Pipeline maturity (Day 3).
+ * Fires when an open lead has not changed pipeline stage in longer than
+ * the configured threshold. This is deliberately distinct from
+ * LEAD_INACTIVITY: a lead can have recent notes, tasks, or follow-ups
+ * (so LEAD_INACTIVITY stays silent) while still being stuck in the same
+ * stage for weeks — that is a pipeline-health problem, not an activity
+ * problem, and is backed by real STAGE_CHANGED timeline evidence rather
+ * than a duplicate read of the same "last activity" fact.
+ */
+function evaluatePipelineStagnation(contract, config) {
+  const { pipeline } = contract;
+  if (pipeline.isClosed) return null;
+  if (!pipeline.stageEnteredAt) return null;
+
+  const now = new Date(contract.timestamp);
+  const daysInStage = daysBetween(new Date(pipeline.stageEnteredAt), now);
+  if (daysInStage < config.STAGNATION_THRESHOLD_DAYS) return null;
+
+  return {
+    signal: 'PIPELINE_STAGNATION',
+    insight: `Stuck in "${pipeline.stage}" for ${daysInStage} day(s)`,
+    reason: `This lead has remained in the "${pipeline.stage}" pipeline stage for ${daysInStage} day(s) without progressing, beyond the ${config.STAGNATION_THRESHOLD_DAYS}-day stagnation threshold.`,
+    priority: daysInStage >= config.STAGNATION_HIGH_THRESHOLD_DAYS ? 'HIGH' : 'MEDIUM',
+    recommendation: {
+      type: 'ADVANCE_PIPELINE_STAGE',
+      message: 'Review this lead and either advance it to the next stage or mark it Lost if it is no longer viable.',
+    },
+    confidence: 'High',
+    evidence: {
+      stage: pipeline.stage,
+      stageEnteredAt: pipeline.stageEnteredAt,
+      daysInStage,
+      thresholdDays: config.STAGNATION_THRESHOLD_DAYS,
+    },
+  };
+}
+
+/**
  * Signal: LEAD_INACTIVITY
  * Domain: Inactivity.
  * Fires when an open lead has had no timeline activity for longer than the
@@ -98,7 +137,7 @@ function evaluateLeadInactivity(contract, config) {
     signal: 'LEAD_INACTIVITY',
     insight: `No activity recorded in ${daysInactive} day(s)`,
     reason: `The last recorded timeline activity for this lead was on ${new Date(activity.lastActivityAt).toLocaleDateString()}, which is ${daysInactive} day(s) ago and beyond the ${config.INACTIVITY_THRESHOLD_DAYS}-day inactivity threshold.${activity.openTaskCount > 0 ? ` ${activity.openTaskCount} task(s) remain open.` : ''}`,
-    priority: daysInactive >= config.INACTIVITY_THRESHOLD_DAYS * 2 ? 'HIGH' : 'MEDIUM',
+    priority: daysInactive >= config.INACTIVITY_HIGH_THRESHOLD_DAYS ? 'HIGH' : 'MEDIUM',
     recommendation: {
       type: 'RE_ENGAGE_LEAD',
       message: 'Reach out to the lead or log an update to confirm the deal is still active.',
@@ -195,6 +234,7 @@ function evaluateConversionIndication(contract, config) {
 const RULES = [
   evaluateFollowUpOverdue,
   evaluateFollowUpGap,
+  evaluatePipelineStagnation,
   evaluateLeadInactivity,
   evaluateHighPriorityAttention,
   evaluateConversionIndication,
