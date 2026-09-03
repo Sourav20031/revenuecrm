@@ -5,6 +5,7 @@ import followupRoutes from './followupRoutes.js';
 import proposalRoutes from './proposalRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
 import auditRoutes from './auditRoutes.js';
+import auraRoutes from './auraRoutes.js';
 
 const router = Router();
 
@@ -16,6 +17,11 @@ router.get('/health', (req, res) => {
 });
 
 router.use('/leads', leadRoutes);
+// Aura+ Intelligence Layer: a separate router mounted on the same /leads
+// prefix so GET /api/v1/leads/:id/intelligence sits alongside the existing
+// lead endpoints, while its controller/service code stays fully isolated
+// from leadController.js (Aura+ never touches leadRoutes.js or its logic).
+router.use('/leads', auraRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/followups', followupRoutes);
 router.use('/proposals', proposalRoutes);
