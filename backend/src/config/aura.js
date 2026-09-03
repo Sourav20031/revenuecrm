@@ -15,4 +15,18 @@ export const AURA_CONFIG = {
   // Pipeline stages excluded from inactivity/attention checks — the deal is
   // already closed, so staleness there isn't a signal worth surfacing.
   CLOSED_STAGES: ['WON', 'LOST'],
+
+  // Stages that represent real forward movement, used by the conversion
+  // indication signal to confirm the lead has actually progressed.
+  PROGRESSED_STAGES: ['QUALIFIED', 'FOLLOW_UP', 'PROPOSAL'],
+
+  // Proposal statuses that represent active buyer-side engagement.
+  ACTIVE_PROPOSAL_STATUSES: ['Sent', 'Viewed', 'Negotiation'],
 };
+
+// Normalized Intelligence Input Contract metadata (Day 2).
+// Bumping CONTRACT_VERSION is a breaking-change signal for any consumer
+// (including a future Automation Engine) parsing the normalized shape.
+export const AURA_CONTRACT_VERSION = '1.0';
+export const AURA_SOURCE_SYSTEM = 'STARVNT_REVENUE';
+export const AURA_RECOMMENDATION_SOURCE = 'AURA_PLUS';
